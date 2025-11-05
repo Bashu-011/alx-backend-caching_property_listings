@@ -22,27 +22,27 @@ logger = logging.getLogger(__name__)
 
 def get_redis_cache_metrics():
     """
-    Cache metrics
+    Get redis cahce metrics
     """
-    #connection to the redis instance
-    redis_conn = get_redis_connection("default")
+    try:
+        redis_conn = get_redis_connection("default")
+        info = redis_conn.info()
 
-    #fetch metrics
-    info = redis_conn.info()
+        hits = info.get("keyspace_hits", 0)
+        misses = info.get("keyspace_misses", 0)
 
-    hits = info.get("keyspace_hits", 0)
-    misses = info.get("keyspace_misses", 0)
+        total_requests = hits + misses
+        hit_ratio = (hits / total_requests) if total_requests > 0 else 0 
 
-    #remove division by 0 possibility
-    total = hits + misses
-    hit_ratio = (hits / total) if total > 0 else 0
+        metrics = {
+            "keyspace_hits": hits,
+            "keyspace_misses": misses,
+            "hit_ratio": round(hit_ratio, 2),
+        }
 
-    metrics = {
-        "keyspace_hits": hits,
-        "keyspace_misses": misses,
-        "hit_ratio": round(hit_ratio, 2),
-    }
+        logger.error(f"Redis Cache Metrics: {metrics}")  
+        return metrics
 
-    logger.info(f"Redis Cache Metrics: {metrics}")
-    return metrics
-
+    except Exception as e:
+        logger.error(f"Error retrieving Redis metrics: {e}")
+        return {"error": str(e)}
