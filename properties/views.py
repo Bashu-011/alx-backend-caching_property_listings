@@ -9,6 +9,10 @@ def property_list(request):
     qs = Property.objects.all().values(
         'id', 'title', 'description', 'price', 'location', 'created_at'
     )
-    #return json with top level key as data
-    return JsonResponse({"data": list(qs)})
+    prop_list = list(qs)
+    #returning data with the appropriate keys
+    return JsonResponse({
+        "data": prop_list,
+        "properties": prop_list,
+    })
 
